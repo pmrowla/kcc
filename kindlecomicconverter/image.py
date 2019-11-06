@@ -92,6 +92,9 @@ class ProfileData:
         'KoAH2O': ("Kobo Aura H2O", (1080, 1430), Palette16, 1.8),
         'KoAO': ("Kobo Aura ONE", (1404, 1872), Palette16, 1.8),
         'KoF': ("Kobo Forma", (1440, 1920), Palette16, 1.8),
+        'iPad1': ("Original gen iPad 1/2", (768, 1024), Palette16, 1.8),
+        'iPadPro': ("iPad Pro/2019 Air", (2048, 2732), Palette16, 1.8),
+        'iPad': ("All other iPads", (1536, 2048), Palette16, 1.8),
         'OTHER': ("Other", (0, 0), Palette16, 1.8),
     }
 

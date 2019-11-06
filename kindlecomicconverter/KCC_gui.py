@@ -950,6 +950,12 @@ class KCCGUI(KCC_ui.Ui_mainWindow):
                                 'DefaultUpscale': False, 'Label': 'K34'},
             "Kindle Touch": {'PVOptions': False, 'ForceExpert': False, 'DefaultFormat': 0,
                              'DefaultUpscale': False, 'Label': 'K34'},
+            "iPad 1/2": {'PVOptions': False, 'ForceExpert': False, 'DefaultFormat': 0,
+                             'DefaultUpscale': False, 'Label': 'iPad1'},
+            "iPad Pro": {'PVOptions': False, 'ForceExpert': False, 'DefaultFormat': 0,
+                             'DefaultUpscale': False, 'Label': 'iPadPro'},
+            "iPad": {'PVOptions': False, 'ForceExpert': False, 'DefaultFormat': 0,
+                             'DefaultUpscale': False, 'Label': 'iPad'},
         }
         profilesGUI = [
             "Kindle Oasis 2/3",
@@ -976,6 +982,10 @@ class KCCGUI(KCC_ui.Ui_mainWindow):
             "Kobo Glo HD",
             "Kobo Glo",
             "Kobo Mini/Touch",
+            "Separator",
+            "iPad 1/2",
+            "iPad Pro",
+            "iPad",
         ]
 
         statusBarLabel = QtWidgets.QLabel('<b><a href="https://kcc.iosphe.re/">HOMEPAGE</a> - <a href="https://github.'
@@ -1036,6 +1046,8 @@ class KCCGUI(KCC_ui.Ui_mainWindow):
                 GUI.deviceBox.insertSeparator(GUI.deviceBox.count() + 1)
             elif 'Ko' in profile:
                 GUI.deviceBox.addItem(self.icons.deviceKobo, profile)
+            elif 'iPad' in profile:
+                GUI.deviceBox.addItem(self.icons.deviceOther, profile)
             else:
                 GUI.deviceBox.addItem(self.icons.deviceKindle, profile)
         for f in ['MOBI/AZW3', 'EPUB', 'CBZ']:

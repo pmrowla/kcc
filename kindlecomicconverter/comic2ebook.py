@@ -226,7 +226,7 @@ def buildNCX(dstdir, title, chapters, chapternames):
     f.close()
 
 
-def buildNAV(dstdir, title, chapters, chapternames):
+def buildNAV(dstdir, title, chapters, chapternames, filelist):
     navfile = os.path.join(dstdir, 'OEBPS', 'nav.xhtml')
     f = open(navfile, "w", encoding='UTF-8')
     f.writelines(["<?xml version=\"1.0\" encoding=\"utf-8\"?>\n",
@@ -248,18 +248,41 @@ def buildNAV(dstdir, title, chapters, chapternames):
             title = chapternames[os.path.basename(folder)]
         f.write("<li><a href=\"" + filename[0].replace("\\", "/") + ".xhtml\">" + hescape(title) + "</a></li>\n")
     f.writelines(["</ol>\n",
-                  "</nav>\n",
-                  "<nav epub:type=\"page-list\">\n",
-                  "<ol>\n"])
-    for chapter in chapters:
-        folder = chapter[0].replace(os.path.join(dstdir, 'OEBPS'), '').lstrip('/').lstrip('\\\\')
-        filename = getImageFileName(os.path.join(folder, chapter[1]))
-        if options.chapters:
-            title = chapternames[chapter[1]]
-        elif os.path.basename(folder) != "Text":
-            title = chapternames[os.path.basename(folder)]
-        f.write("<li><a href=\"" + filename[0].replace("\\", "/") + ".xhtml\">" + hescape(title) + "</a></li>\n")
-    f.write("</ol>\n</nav>\n</body>\n</html>")
+                  "</nav>\n"])
+    if options.isibook:
+        f.writelines(["<nav epub:type=\"page-list\">\n",
+                      "<ol>\n"])
+        for i, path in enumerate(filelist):
+            folder = path[0].replace(os.path.join(dstdir, 'OEBPS'), '').lstrip('/').lstrip('\\\\').replace("\\", "/")
+            filename = getImageFileName(path[1])
+            f.write("<li><a href=\"" +
+                    folder.replace('Images', 'Text') + "/" + filename[0] +
+                    ".xhtml\">" + str(i + 1) + "</a></li>\n")
+        f.write("</ol>\n</nav>\n")
+
+        f.writelines(["<nav epub:type=\"landmarks\">\n",
+                      "<ol>\n"])
+        for chapter in chapters:
+            folder = chapter[0].replace(os.path.join(dstdir, 'OEBPS'), '').lstrip('/').lstrip('\\\\')
+            filename = getImageFileName(os.path.join(folder, chapter[1]))
+            if options.chapters:
+                title = chapternames[chapter[1]]
+            elif os.path.basename(folder) != "Text":
+                title = chapternames[os.path.basename(folder)]
+            f.write("<li><a href=\"" + filename[0].replace("\\", "/") + ".xhtml\" epub:type=\"chapter\">" + hescape(title) + "</a></li>\n")
+        f.write("</ol>\n</nav>\n</body>\n</html>")
+    else:
+        f.writelines(["<nav epub:type=\"page-list\">\n",
+                      "<ol>\n"])
+        for chapter in chapters:
+            folder = chapter[0].replace(os.path.join(dstdir, 'OEBPS'), '').lstrip('/').lstrip('\\\\')
+            filename = getImageFileName(os.path.join(folder, chapter[1]))
+            if options.chapters:
+                title = chapternames[chapter[1]]
+            elif os.path.basename(folder) != "Text":
+                title = chapternames[os.path.basename(folder)]
+            f.write("<li><a href=\"" + filename[0].replace("\\", "/") + ".xhtml\">" + hescape(title) + "</a></li>\n")
+        f.write("</ol>\n</nav>\n</body>\n</html>")
     f.close()
 
 
@@ -273,7 +296,10 @@ def buildOPF(dstdir, title, filelist, cover=None):
     f = open(opffile, "w", encoding='UTF-8')
     f.writelines(["<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",
                   "<package version=\"3.0\" unique-identifier=\"BookID\" ",
-                  "xmlns=\"http://www.idpf.org/2007/opf\">\n",
+                  "xmlns=\"http://www.idpf.org/2007/opf\""])
+    if options.isibook:
+        f.writelines([' prefix="ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/"'])
+    f.writelines([">\n",
                   "<metadata xmlns:opf=\"http://www.idpf.org/2007/opf\" ",
                   "xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n",
                   "<dc:title>", hescape(title), "</dc:title>\n",
@@ -284,6 +310,8 @@ def buildOPF(dstdir, title, filelist, cover=None):
         f.writelines(["<dc:description>", options.summary, "</dc:description>\n"])
     for author in options.authors:
         f.writelines(["<dc:creator>", author, "</dc:creator>\n"])
+    if options.isibook and options.ibooks_version:
+        f.write("<meta property=\"ibooks:version\">" + options.ibooks_version + "</meta>\n")
     f.writelines(["<meta property=\"dcterms:modified\">" + strftime("%Y-%m-%dT%H:%M:%SZ", gmtime()) + "</meta>\n",
                   "<meta name=\"cover\" content=\"cover\"/>\n"])
     if options.iskindle and options.profile != 'Custom':
@@ -302,6 +330,10 @@ def buildOPF(dstdir, title, filelist, cover=None):
         else:
             f.writelines(["<meta name=\"orientation-lock\" content=\"portrait\"/>\n",
                           "<meta name=\"region-mag\" content=\"true\"/>\n"])
+    elif options.isibook and options.profile != 'Custom':
+        f.writelines(["<meta property=\"rendition:orientation\">portrait</meta>\n",
+                      "<meta property=\"rendition:spread\">both</meta>\n",
+                      "<meta property=\"rendition:layout\">pre-paginated</meta>\n"])
     else:
         f.writelines(["<meta property=\"rendition:orientation\">portrait</meta>\n",
                       "<meta property=\"rendition:spread\">portrait</meta>\n",
@@ -370,6 +402,9 @@ def buildOPF(dstdir, title, filelist, cover=None):
                     pageside = "left"
                 else:
                     pageside = "right"
+    elif options.isibook:
+        for entry in reflist:
+            f.write("<itemref idref=\"page_" + entry + "\" linear=\"yes\"/>\n")
     else:
         for entry in reflist:
             f.write("<itemref idref=\"page_" + entry + "\"/>\n")
@@ -495,7 +530,7 @@ def buildEPUB(path, chapternames, tomenumber):
             chapternames[filename] = aChapter[1]
             globaldiff = pageid - (aChapter[0] + globaldiff)
     buildNCX(path, options.title, chapterlist, chapternames)
-    buildNAV(path, options.title, chapterlist, chapternames)
+    buildNAV(path, options.title, chapterlist, chapternames, filelist)
     buildOPF(path, options.title, filelist, cover)
 
 
@@ -908,9 +943,9 @@ def makeParser():
     customProfileOptions = OptionGroup(psr, "CUSTOM PROFILE")
     otherOptions = OptionGroup(psr, "OTHER")
 
-    mainOptions.add_option("-p", "--profile", action="store", dest="profile", default="KV",
+    mainOptions.add_option("-p", "--profile", action="store", dest="profile", default="iPad",
                            help="Device profile (Available options: K1, K2, K34, K578, KDX, KPW, KV, KO, KoMT, KoG,"
-                                " KoGHD, KoA, KoAHD, KoAH2O, KoAO, KoF) [Default=KV]")
+                                " KoGHD, KoA, KoAHD, KoAH2O, KoAO, KoF, iPad1, iPadPro, iPad) [Default=iPad]")
     mainOptions.add_option("-m", "--manga-style", action="store_true", dest="righttoleft", default=False,
                            help="Manga style (right-to-left reading and splitting)")
     mainOptions.add_option("-q", "--hq", action="store_true", dest="hq", default=False,
@@ -929,6 +964,10 @@ def makeParser():
     outputOptions.add_option("-b", "--batchsplit", type="int", dest="batchsplit", default="0",
                              help="Split output into multiple files. 0: Don't split 1: Automatic mode "
                                   "2: Consider every subdirectory as separate volume [Default=0]")
+    outputOptions.add_option("--ibooks-version", action="store", default="1.0",
+                             help="iBooks book version (proper versioning ensures Apple Books does not "
+                                  "use an old cached version of an EPUB you have modified and re-added "
+                                  "to your library) [Default=1.0]")
 
     processingOptions.add_option("-u", "--upscale", action="store_true", dest="upscale", default=False,
                                  help="Resize images smaller than device's resolution")
@@ -971,17 +1010,24 @@ def checkOptions():
     global options
     options.panelview = True
     options.iskindle = False
+    options.isibook = False
     options.bordersColor = None
     options.kfx = False
     if options.format == 'Auto':
         if options.profile in ['K1', 'K2', 'K34', 'K578', 'KPW', 'KV', 'KO']:
             options.format = 'MOBI'
-        elif options.profile in ['OTHER', 'KoMT', 'KoG', 'KoGHD', 'KoA', 'KoAHD', 'KoAH2O', 'KoAO']:
+        elif options.profile in ['OTHER', 'KoMT', 'KoG', 'KoGHD', 'KoA', 'KoAHD', 'KoAH2O', 'KoAO', 'iPad1', 'iPadPro', 'iPad']:
             options.format = 'EPUB'
         elif options.profile in ['KDX']:
             options.format = 'CBZ'
     if options.profile in ['K1', 'K2', 'K34', 'K578', 'KPW', 'KV', 'KO']:
         options.iskindle = True
+    if options.profile in ['iPad1', 'iPadPro', 'iPad']:
+        options.isibook = True
+        options.forcepng = False
+        options.forcecolor = True
+        options.panelview = False
+        options.hq = False
     if options.white_borders:
         options.bordersColor = 'white'
     if options.black_borders:
