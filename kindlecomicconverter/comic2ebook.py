@@ -119,9 +119,12 @@ def buildHTML(path, imgfile, imgfilepath):
                   "content=\"width=" + str(imgsize[0]) + ", height=" + str(imgsize[1]) + "\"/>\n"
                   "</head>\n",
                   "<body style=\"" + additionalStyle + "\">\n",
-                  "<div style=\"text-align:center;top:" + getTopMargin(deviceres, imgsizeframe) + "%;\">\n",
-                  "<img width=\"" + str(imgsizeframe[0]) + "\" height=\"" + str(imgsizeframe[1]) + "\" ",
-                  "src=\"", "../" * backref, "Images/", postfix, imgfile, "\"/>\n</div>\n"])
+                  "<div style=\"text-align:center;top:" + getTopMargin(deviceres, imgsizeframe) + "%;\">\n"])
+    if options.isibook:
+        f.writelines(["<img "])
+    else:
+        f.writelines(["<img width=\"" + str(imgsizeframe[0]) + "\" height=\"" + str(imgsizeframe[1]) + "\" "])
+    f.writelines(["src=\"", "../" * backref, "Images/", postfix, imgfile, "\"/>\n</div>\n"])
     if options.iskindle and options.panelview:
         if options.autoscale:
             size = (getPanelViewResolution(imgsize, deviceres))
@@ -301,7 +304,7 @@ def buildOPF(dstdir, title, filelist, cover=None):
                   "<package version=\"3.0\" unique-identifier=\"BookID\" ",
                   "xmlns=\"http://www.idpf.org/2007/opf\""])
     if options.isibook:
-        f.writelines([' prefix="ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/"'])
+        f.writelines([' prefix="ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/ rendition: http://www.idpf.org/vocab/rendition/#"'])
     f.writelines([">\n",
                   "<metadata xmlns:opf=\"http://www.idpf.org/2007/opf\" ",
                   "xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n",
@@ -502,6 +505,10 @@ def buildEPUB(path, chapternames, tomenumber):
                       "top: 0;\n",
                       "position: absolute;\n",
                       "display: none;\n",
+                      "}\n"])
+    elif options.isibook:
+        f.writelines(["img {\n",
+                      "height: 100vh;\n",
                       "}\n"])
     f.close()
     for dirpath, dirnames, filenames in os.walk(os.path.join(path, 'OEBPS', 'Images')):
