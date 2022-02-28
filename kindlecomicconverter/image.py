@@ -94,6 +94,7 @@ class ProfileData:
         'KoF': ("Kobo Forma", (1440, 1920), Palette16, 1.8),
         'iPad1': ("Original gen iPad 1/2", (768, 1024), Palette16, 1.8),
         'iPadPro': ("iPad Pro/2019 Air", (2048, 2732), Palette16, 1.8),
+        'iPadAir4': ("iPad Air (4th Generation)", (1640, 2360), Palette16, 1.8),
         'iPad': ("All other iPads", (1536, 2048), Palette16, 1.8),
         'OTHER': ("Other", (0, 0), Palette16, 1.8),
     }
@@ -244,7 +245,7 @@ class ComicPage:
                 self.image.save(self.targetPath, 'PNG', optimize=1)
             else:
                 self.targetPath += '.jpg'
-                self.image.save(self.targetPath, 'JPEG', optimize=1, quality=85)
+                self.image.save(self.targetPath, 'JPEG', optimize=1, quality=90)
             return [md5Checksum(self.targetPath), flags, self.orgPath]
         except IOError as err:
             raise RuntimeError('Cannot save image. ' + str(err))
